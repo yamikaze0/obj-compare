@@ -1,5 +1,8 @@
 package org.yamikaze.compare;
 
+import org.yamikaze.compare.diff.NullOfOneObject;
+import org.yamikaze.compare.diff.SizeCompareDissmilarity;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -28,7 +31,7 @@ public class MapCompare extends AbstractCompare<Map> {
 
         //有一个为空
         if (objIsNull || compareIsNull) {
-            context.addFailItem(new HasNullFailItem(context.generatePrefix(), expectObject, compareObject));
+            context.addDiff(new NullOfOneObject(context.generatePrefix(), expectObject, compareObject));
             return;
         }
 
@@ -36,7 +39,7 @@ public class MapCompare extends AbstractCompare<Map> {
         int compareSize = compareObject.size();
 
         if (objSize != compareSize) {
-            context.addFailItem(new SizeCompareFailItem(context.generatePrefix(), objSize, compareSize));
+            context.addDiff(new SizeCompareDissmilarity(context.generatePrefix(), objSize, compareSize));
             return;
         }
 

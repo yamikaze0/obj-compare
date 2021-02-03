@@ -1,5 +1,7 @@
 package org.yamikaze.compare;
 
+import org.yamikaze.compare.diff.NotEqualsDissmilarity;
+
 import java.util.Objects;
 
 /**
@@ -19,7 +21,7 @@ public class StringCompare extends AbstractCompare<String> {
 
         boolean result = Objects.equals(expectObject, compareObject);
         if (!result) {
-            context.addFailItem(new NotEqualsFailItem(context.generatePrefix(), expectObject, compareObject));
+            context.addDiff(new NotEqualsDissmilarity(context.generatePrefix(), expectObject, compareObject));
         }
     }
 }

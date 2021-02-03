@@ -1,5 +1,7 @@
 package org.yamikaze.compare;
 
+import org.yamikaze.compare.utils.InternalCompUtils;
+
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Collection;
@@ -12,7 +14,10 @@ import java.util.Map;
  */
 public abstract class AbstractCompare<T> implements Compare<T> {
 
-    private Type type;
+    /**
+     * Actually Generic Type.
+     */
+    private final Type type;
 
     public AbstractCompare() {
         Type genericSuperclass = this.getClass().getGenericSuperclass();
@@ -50,15 +55,15 @@ public abstract class AbstractCompare<T> implements Compare<T> {
     public abstract void compareObj(T expectObject, T compareObject, CompareContext<T> context);
 
     String nullString(boolean isNull) {
-        return CompareUtils.nullString(isNull);
+        return InternalCompUtils.nullString(isNull);
     }
 
     boolean isEmpty(Map map) {
-        return CompareUtils.isEmpty(map);
+        return InternalCompUtils.isEmpty(map);
     }
 
     boolean isEmpty(Collection map) {
-        return CompareUtils.isEmpty(map);
+        return InternalCompUtils.isEmpty(map);
     }
 
     String prefix(String str) {
@@ -70,6 +75,6 @@ public abstract class AbstractCompare<T> implements Compare<T> {
     }
 
     boolean isBlank(String params) {
-        return CompareUtils.isBlank(params);
+        return InternalCompUtils.isBlank(params);
     }
 }

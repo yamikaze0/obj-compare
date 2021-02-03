@@ -1,17 +1,17 @@
-package org.yamikaze.compare;
+package org.yamikaze.compare.diff;
 
 /**
  * @author qinluo
  * @version 1.0.0
  * @date 2020-08-18 16:35
  */
-public class TypeCompareFailItem extends NotEqualsFailItem {
+public class TypeCompareDissmilarity extends NotEqualsDissmilarity {
 
-    public TypeCompareFailItem(String path) {
+    public TypeCompareDissmilarity(String path) {
         super(path);
     }
 
-    public TypeCompareFailItem(String path, Object expectVal, Object compareVal) {
+    public TypeCompareDissmilarity(String path, Object expectVal, Object compareVal) {
         super(path, expectVal, compareVal);
     }
 

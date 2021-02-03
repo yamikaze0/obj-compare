@@ -1,5 +1,8 @@
 package org.yamikaze.compare;
 
+import org.yamikaze.compare.diff.NullOfOneObject;
+import org.yamikaze.compare.diff.SizeCompareDissmilarity;
+
 import java.util.List;
 
 /**
@@ -18,14 +21,14 @@ public class ListCompare extends AbstractCompare<List>{
         }
 
         if (expectObject == null || compareObject == null) {
-            context.addFailItem(new HasNullFailItem(context.generatePrefix(), expectObject, compareObject));
+            context.addDiff(new NullOfOneObject(context.generatePrefix(), expectObject, compareObject));
             return;
         }
 
         int size1 = expectObject.size();
         int size2 = compareObject.size();
         if (size1 != size2) {
-            context.addFailItem(new SizeCompareFailItem(context.generatePrefix(), size1, size2));
+            context.addDiff(new SizeCompareDissmilarity(context.generatePrefix(), size1, size2));
             return;
         }
 

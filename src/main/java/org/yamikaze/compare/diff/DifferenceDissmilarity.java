@@ -1,4 +1,4 @@
-package org.yamikaze.compare;
+package org.yamikaze.compare.diff;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,7 +8,7 @@ import java.util.List;
  * @version 1.0.0
  * @date 2020-08-18 15:50
  */
-public class DifferenceFailItem implements CompareFailItem {
+public class DifferenceDissmilarity implements Difference {
 
     private List<String> expectKeys = new ArrayList<>();
 
@@ -37,5 +37,10 @@ public class DifferenceFailItem implements CompareFailItem {
 
     private String cast(List<String> val) {
         return String.valueOf(val);
+    }
+
+    @Override
+    public String getMessage() {
+        return null;
     }
 }

@@ -1,5 +1,9 @@
 package org.yamikaze.compare;
 
+import org.yamikaze.compare.diff.DifferenceDissmilarity;
+import org.yamikaze.compare.diff.NullOfOneObject;
+import org.yamikaze.compare.diff.TagsCompareDissmilarity;
+
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -28,7 +32,7 @@ public class TagNamedTypeCompare extends AbstractNamedTypeCompare<String> {
         boolean finished = false;
         if (expectObject == null || compareObject == null) {
             finished = true;
-            context.addFailItem(new HasNullFailItem(context.generatePrefix(), expectObject, compareObject));
+            context.addDiff(new NullOfOneObject(context.generatePrefix(), expectObject, compareObject));
         }
 
         if (finished) {
@@ -45,8 +49,8 @@ public class TagNamedTypeCompare extends AbstractNamedTypeCompare<String> {
         Set<String> expectTags = parseTags(expectObject);
         Set<String> compareTags = parseTags(compareObject);
 
-        TagsCompareFailItem failItem = new TagsCompareFailItem(context.generatePrefix());
-        DifferenceFailItem differenceFailItem = new DifferenceFailItem();
+        TagsCompareDissmilarity failItem = new TagsCompareDissmilarity(context.generatePrefix());
+        DifferenceDissmilarity differenceFailItem = new DifferenceDissmilarity();
 
         for (String key : expectTags) {
 
@@ -60,7 +64,7 @@ public class TagNamedTypeCompare extends AbstractNamedTypeCompare<String> {
         failItem.setDifferenceFailItem(differenceFailItem);
 
         if (hasError) {
-            context.addFailItem(failItem);
+            context.addDiff(failItem);
         }
 
     }

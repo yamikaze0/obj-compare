@@ -1,17 +1,17 @@
-package org.yamikaze.compare;
+package org.yamikaze.compare.diff;
 
 /**
  * @author qinluo
  * @version 1.0.0
  * @date 2020-08-18 16:18
  */
-public class HasNullFailItem extends NotEqualsFailItem {
+public class NullOfOneObject extends NotEqualsDissmilarity {
 
-    public HasNullFailItem(String path) {
+    public NullOfOneObject(String path) {
         super(path);
     }
 
-    public HasNullFailItem(String path, Object expectVal, Object compareVal) {
+    public NullOfOneObject(String path, Object expectVal, Object compareVal) {
         super(path, expectVal, compareVal);
     }
 

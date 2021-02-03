@@ -1,4 +1,4 @@
-package org.yamikaze.compare;
+package org.yamikaze.compare.utils;
 
 import java.util.Collection;
 import java.util.Map;
@@ -8,29 +8,29 @@ import java.util.Map;
  * @version 1.0.0
  * @since 2019-05-27 23:00
  */
-class CompareUtils {
+public class InternalCompUtils {
 
-    static String nullString(boolean isNull) {
+    public static String nullString(boolean isNull) {
         return isNull ? "null" : "not null";
     }
 
-    static boolean isBlank(String params) {
+    public static boolean isBlank(String params) {
         return params == null || params.trim().length() == 0;
     }
 
-    static boolean isEmpty(Collection list) {
+    public static boolean isEmpty(Collection list) {
         return list == null || list.isEmpty();
     }
 
-    static boolean isEmpty(Map map) {
+    public static boolean isEmpty(Map map) {
         return map == null || map.isEmpty();
     }
 
-    static void appendNewLine(StringBuilder sb) {
+    public static void appendNewLine(StringBuilder sb) {
         sb.append("\n");
     }
 
-    static void appendTab(StringBuilder sb) {
+    public static void appendTab(StringBuilder sb) {
         sb.append("\t");
     }
 }

@@ -1,17 +1,17 @@
-package org.yamikaze.compare;
+package org.yamikaze.compare.diff;
 
 /**
  * @author qinluo
  * @version 1.0.0
  * @date 2020-08-18 16:19
  */
-public class SizeCompareFailItem extends NotEqualsFailItem {
+public class SizeCompareDissmilarity extends NotEqualsDissmilarity {
 
-    public SizeCompareFailItem(String path) {
+    public SizeCompareDissmilarity(String path) {
         super(path);
     }
 
-    public SizeCompareFailItem(String path, int expectValSize, int compareValSize) {
+    public SizeCompareDissmilarity(String path, int expectValSize, int compareValSize) {
         super(path, expectValSize, compareValSize);
     }
 

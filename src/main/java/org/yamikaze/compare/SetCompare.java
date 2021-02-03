@@ -1,5 +1,9 @@
 package org.yamikaze.compare;
 
+import org.yamikaze.compare.diff.NullOfOneObject;
+import org.yamikaze.compare.diff.NotEqualsDissmilarity;
+import org.yamikaze.compare.diff.SizeCompareDissmilarity;
+
 import java.util.Set;
 
 /**
@@ -26,7 +30,7 @@ public class SetCompare extends AbstractCompare<Set> {
 
         //有一个为空
         if (objIsNull || compareIsNull) {
-            context.addFailItem(new HasNullFailItem(context.generatePrefix(), expectObject, compareObject));
+            context.addDiff(new NullOfOneObject(context.generatePrefix(), expectObject, compareObject));
             return;
         }
 
@@ -34,7 +38,7 @@ public class SetCompare extends AbstractCompare<Set> {
         int compareSize = compareObject.size();
 
         if (objSize != compareSize) {
-            context.addFailItem(new SizeCompareFailItem(context.generatePrefix(), objSize, compareSize));
+            context.addDiff(new SizeCompareDissmilarity(context.generatePrefix(), objSize, compareSize));
             return;
         }
 
@@ -43,7 +47,7 @@ public class SetCompare extends AbstractCompare<Set> {
                 continue;
             }
 
-            context.addFailItem(new NotEqualsFailItem(context.generatePrefix() + "." + setKey, setKey, null));
+            context.addDiff(new NotEqualsDissmilarity(context.generatePrefix() + "." + setKey, setKey, null));
         }
     }
 }

@@ -1,5 +1,10 @@
 package org.yamikaze.compare;
 
+import org.yamikaze.compare.diff.NotEqualsDissmilarity;
+import org.yamikaze.compare.diff.NullOfOneObject;
+import org.yamikaze.compare.diff.TypeCompareDissmilarity;
+import org.yamikaze.compare.utils.InternalClassUtils;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -19,37 +24,15 @@ import java.util.stream.Collectors;
  */
 public class ObjectCompare extends AbstractCompare<Object>{
 
-    private static List<Class> classes = new ArrayList<>(8);
-
-    static {
-        classes.add(int.class);
-        classes.add(double.class);
-        classes.add(float.class);
-        classes.add(byte.class);
-        classes.add(char.class);
-        classes.add(long.class);
-        classes.add(short.class);
-        classes.add(boolean.class);
-        classes.add(Integer.class);
-        classes.add(Byte.class);
-        classes.add(Short.class);
-        classes.add(Long.class);
-        classes.add(Float.class);
-        classes.add(Double.class);
-        classes.add(Character.class);
-        classes.add(Boolean.class);
-        classes.add(Object.class);
-    }
-
     @Override
     public void compareObj(Object expectObject, Object compareObject, CompareContext<Object> context) {
         Object noNullObject = orElse(expectObject, compareObject);
         Class<?> noNullObjectClass = noNullObject.getClass();
 
-        if (classes.contains(noNullObjectClass) && !isBoolean(noNullObjectClass)) {
+        if (InternalClassUtils.isSimple(noNullObjectClass) && !isBoolean(noNullObjectClass)) {
             boolean result = Objects.equals(expectObject, compareObject);
             if (!result) {
-                context.addFailItem(new NotEqualsFailItem(context.generatePrefix(), expectObject, compareObject));
+                context.addDiff(new NotEqualsDissmilarity(context.generatePrefix(), expectObject, compareObject));
             }
             return;
         }
@@ -60,19 +43,19 @@ public class ObjectCompare extends AbstractCompare<Object>{
             boolean compareIsColl = isCollection(compareObject.getClass());
             //有一个是集合，但是另外一个不是的情况
             if (objIsColl != compareIsColl) {
-                context.addFailItem(new TypeCompareFailItem(context.generatePrefix(), expectObject, compareObject));
+                context.addDiff(new TypeCompareDissmilarity(context.generatePrefix(), expectObject, compareObject));
                 return;
             }
 
             //2个都不是集合的情况
             if (!objIsColl) {
                 if (expectObject.getClass() != compareObject.getClass()) {
-                    context.addFailItem(new TypeCompareFailItem(context.generatePrefix(), expectObject, compareObject));
+                    context.addDiff(new TypeCompareDissmilarity(context.generatePrefix(), expectObject, compareObject));
                     return;
                 }
             } else if (!noNullObjectClass.isArray() && !isSameCollection(expectObject.getClass(), compareObject.getClass())){
                 //不属于同一种集合的情况
-                context.addFailItem(new TypeCompareFailItem(context.generatePrefix(), expectObject, compareObject));
+                context.addDiff(new TypeCompareDissmilarity(context.generatePrefix(), expectObject, compareObject));
                 return;
             }
         }
@@ -104,18 +87,18 @@ public class ObjectCompare extends AbstractCompare<Object>{
                 if (equalsMethod.getDeclaringClass() != Object.class) {
                     boolean result = Objects.equals(expectObject, compareObject);
                     if (!result) {
-                        context.addFailItem(new NotEqualsFailItem(context.generatePrefix(), objValue(expectObject), objValue(compareObject)));
+                        context.addDiff(new NotEqualsDissmilarity(context.generatePrefix(), objValue(expectObject), objValue(compareObject)));
                     }
                     return;
                 }
             } catch (Exception e) {
                 //
-                context.addFailItem(new CompareErrorItem(e));
+                context.addDiff(new CompareErrorItem(e));
                 return;
             }
 
             if (hasOneNull) {
-                context.addFailItem(new HasNullFailItem(context.generatePrefix(), expectObject, compareObject));
+                context.addDiff(new NullOfOneObject(context.generatePrefix(), expectObject, compareObject));
                 return;
             }
 
@@ -220,7 +203,7 @@ public class ObjectCompare extends AbstractCompare<Object>{
             return null;
         }
 
-        if (classes.contains(value.getClass())) {
+        if (InternalClassUtils.isSimple(value.getClass())) {
             return String.valueOf(value);
         }
 

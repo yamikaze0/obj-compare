@@ -1,5 +1,8 @@
 package org.yamikaze.compare;
 
+import org.yamikaze.compare.diff.Difference;
+import org.yamikaze.compare.utils.InternalCompUtils;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,7 +50,12 @@ public class CompareContext<T> {
      */
     private List<IgnoreField> ignoreFields;
 
-    private static List<IgnoreField> systemIgnoreFields = new ArrayList<>(16);
+    /**
+     * Current compare depth.
+     */
+    private int depth;
+
+    private static final List<IgnoreField> systemIgnoreFields = new ArrayList<>(16);
 
     static {
         // fix inner classes
@@ -121,12 +129,16 @@ public class CompareContext<T> {
         this.type = type;
     }
 
-    public void addFailItem(CompareFailItem failItem) {
-        result.addFailItem(failItem);
+    public int getDepth() {
+        return depth;
+    }
+
+    public void addDiff(Difference diff) {
+        result.addFailItem(diff);
     }
 
     public String generatePrefix() {
-        if (CompareUtils.isBlank(comparePath)) {
+        if (InternalCompUtils.isBlank(comparePath)) {
             return "";
         }
 
@@ -134,14 +146,15 @@ public class CompareContext<T> {
     }
 
     public CompareContext<Object> clone(Object obj, Object compare) {
-        CompareContext<Object> context1 = new CompareContext<>();
-        context1.setExpectObject(obj);
-        context1.setCompareObject(compare);
-        context1.setStrictMode(this.isStrictMode());
-        context1.setResult(this.getResult());
-        context1.setIgnoreFields(this.getIgnoreFields());
-        context1.setType(Object.class);
-        return context1;
+        CompareContext<Object> context = new CompareContext<>();
+        context.setExpectObject(obj);
+        context.setCompareObject(compare);
+        context.setStrictMode(this.isStrictMode());
+        context.setResult(this.getResult());
+        context.setIgnoreFields(this.getIgnoreFields());
+        context.setType(Object.class);
+        context.depth = this.depth + 1;
+        return context;
     }
 
 

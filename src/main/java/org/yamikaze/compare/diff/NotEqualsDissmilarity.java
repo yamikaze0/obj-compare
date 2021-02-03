@@ -1,21 +1,21 @@
-package org.yamikaze.compare;
+package org.yamikaze.compare.diff;
 
 /**
  * @author qinluo
  * @version 1.0.0
  * @date 2020-08-18 15:44
  */
-public class NotEqualsFailItem extends AbstractCompareFailItem {
+public class NotEqualsDissmilarity extends AbstractCompareDissmilarity {
 
     private Object expectVal;
 
     private Object compareVal;
 
-    public NotEqualsFailItem(String path) {
+    public NotEqualsDissmilarity(String path) {
         super(path);
     }
 
-    public NotEqualsFailItem(String path, Object expectVal, Object compareVal) {
+    public NotEqualsDissmilarity(String path, Object expectVal, Object compareVal) {
         super(path);
         this.expectVal = expectVal;
         this.compareVal = compareVal;

@@ -23,7 +23,7 @@ public class CompareFactory {
         COMPARE_MAP.put(List.class, new ListCompare());
         COMPARE_MAP.put(Object.class, new ObjectCompare());
         COMPARE_MAP.put(Map.class, new MapCompare());
-        COMPARE_MAP.put(null, new NullCompare());
+        COMPARE_MAP.put(null, new NoOpCompare());
         COMPARE_MAP.put(Set.class, new SetCompare());
         COMPARE_MAP.put(Date.class, new DateCompare());
 

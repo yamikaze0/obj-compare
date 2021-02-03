@@ -1,5 +1,10 @@
 package org.yamikaze.compare;
 
+import org.yamikaze.compare.diff.AttributeCompareDissmilarity;
+import org.yamikaze.compare.diff.DifferenceDissmilarity;
+import org.yamikaze.compare.diff.NullOfOneObject;
+import org.yamikaze.compare.diff.NotEqualsDissmilarity;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -30,7 +35,7 @@ public class AttributesNamedTypeCompare extends AbstractNamedTypeCompare<String>
         boolean finished = false;
         if (expectObject == null || compareObject == null) {
             finished = true;
-            context.addFailItem(new HasNullFailItem(context.generatePrefix(), expectObject, compareObject));
+            context.addDiff(new NullOfOneObject(context.generatePrefix(), expectObject, compareObject));
         }
 
         if (finished) {
@@ -47,8 +52,8 @@ public class AttributesNamedTypeCompare extends AbstractNamedTypeCompare<String>
         Map<String, String> expectAttributeMap = parseAttribute(expectObject);
         Map<String, String> compareAttributeMap = parseAttribute(compareObject);
 
-        AttributeCompareFailItem failItem = new AttributeCompareFailItem(context.generatePrefix());
-        DifferenceFailItem differenceFailItem = new DifferenceFailItem();
+        AttributeCompareDissmilarity failItem = new AttributeCompareDissmilarity(context.generatePrefix());
+        DifferenceDissmilarity differenceFailItem = new DifferenceDissmilarity();
 
         Set<String> keys = expectAttributeMap.keySet();
         Set<String> compareKeys = compareAttributeMap.keySet();
@@ -67,7 +72,7 @@ public class AttributesNamedTypeCompare extends AbstractNamedTypeCompare<String>
 
             if (!Objects.equals(expectVal, compareVal)) {
                 hasError = true;
-                NotEqualsFailItem item = new NotEqualsFailItem(context.generatePrefix() + "." + key);
+                NotEqualsDissmilarity item = new NotEqualsDissmilarity(context.generatePrefix() + "." + key);
                 item.setExpectVal(expectVal);
                 item.setCompareVal(compareVal);
                 failItem.addNotEqualsFailItem(item);
@@ -78,7 +83,7 @@ public class AttributesNamedTypeCompare extends AbstractNamedTypeCompare<String>
         failItem.setDifferenceFailItem(differenceFailItem);
 
         if (hasError) {
-            context.addFailItem(failItem);
+            context.addDiff(failItem);
         }
 
     }
