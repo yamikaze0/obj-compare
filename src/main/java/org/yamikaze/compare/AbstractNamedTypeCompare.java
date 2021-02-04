@@ -12,20 +12,20 @@ public abstract class AbstractNamedTypeCompare<T> extends AbstractCompare<T> {
     /**
      * supported compare fields name
      */
-    private String name;
+    private final String name;
 
     /**
      * supported compare fields type.
      *
      * Object.class mean any type.
      */
-    private Class<?> type;
+    private final Class<?> type;
 
     public AbstractNamedTypeCompare(String name) {
         this(name, Object.class);
     }
 
-    public AbstractNamedTypeCompare(String name, Class type) {
+    public AbstractNamedTypeCompare(String name, Class<?> type) {
         if (name == null || name.trim().length() == 0) {
             throw new IllegalArgumentException("name must not be blank");
         }
@@ -38,7 +38,7 @@ public abstract class AbstractNamedTypeCompare<T> extends AbstractCompare<T> {
         this.type = type;
     }
 
-    protected boolean isMatched(String field, Class type) {
+    protected boolean isMatched(String field, Class<?> type) {
         return Objects.equals(field, name)
                 && (type == this.type || this.type.isAssignableFrom(type));
 

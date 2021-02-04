@@ -9,8 +9,14 @@ import java.util.Objects;
  */
 public class NamedType {
 
+    /**
+     * Name
+     */
     private String name;
 
+    /**
+     * Type
+     */
     private Class<?> type;
 
     public NamedType(String name, Class<?> type) {

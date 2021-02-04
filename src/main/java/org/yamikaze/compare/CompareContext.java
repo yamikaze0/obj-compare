@@ -1,5 +1,7 @@
 package org.yamikaze.compare;
 
+import org.yamikaze.compare.diff.Difference;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,8 +12,6 @@ import java.util.List;
  */
 public class CompareContext<T> {
 
-    private static final String COMPARE_FAIL = "compare fail";
-
     /**
      * Compare result.
      */
@@ -20,17 +20,17 @@ public class CompareContext<T> {
     /**
      * Expect Object
      */
-    private Object expectObject;
+    private Object expect;
 
     /**
      * Compare Object
      */
-    private Object compareObject;
+    private Object actual;
 
     /**
      * The compare path. such as obj.field.subField.
      */
-    private String comparePath;
+    private String path = "";
 
     /**
      * The compare class type.
@@ -47,11 +47,21 @@ public class CompareContext<T> {
      */
     private List<IgnoreField> ignoreFields;
 
-    private static List<IgnoreField> systemIgnoreFields = new ArrayList<>(16);
+    /**
+     * Current compare depth.
+     */
+    private int depth;
+
+    /**
+     * Recycle checker
+     */
+    private RecycleChecker recycleChecker = new RecycleChecker();
+
+    private static final List<IgnoreField> DEFAULT_IGNORES = new ArrayList<>(16);
 
     static {
         // fix inner classes
-        systemIgnoreFields.add(new IgnoreField("this$0"));
+        DEFAULT_IGNORES.add(new IgnoreField("this$0"));
     }
 
 
@@ -65,8 +75,12 @@ public class CompareContext<T> {
             ifs.addAll(ignoreFields);
         }
 
-        ifs.addAll(systemIgnoreFields);
+        ifs.addAll(DEFAULT_IGNORES);
         return ifs;
+    }
+
+    public RecycleChecker getRecycleChecker() {
+        return recycleChecker;
     }
 
     public void setIgnoreFields(List<IgnoreField> ignoreFields) {
@@ -89,28 +103,28 @@ public class CompareContext<T> {
         this.result = result;
     }
 
-    public Object getExpectObject() {
-        return expectObject;
+    public Object getExpect() {
+        return expect;
     }
 
-    public void setExpectObject(Object expectObject) {
-        this.expectObject = expectObject;
+    public void setExpect(Object expect) {
+        this.expect = expect;
     }
 
-    public Object getCompareObject() {
-        return compareObject;
+    public Object getActual() {
+        return actual;
     }
 
-    public void setCompareObject(Object compareObject) {
-        this.compareObject = compareObject;
+    public void setActual(Object actual) {
+        this.actual = actual;
     }
 
-    public String getComparePath() {
-        return comparePath;
+    public String getPath() {
+        return path;
     }
 
-    public void setComparePath(String comparePath) {
-        this.comparePath = comparePath;
+    public void setPath(String path) {
+        this.path = path;
     }
 
     public Class<T> getType() {
@@ -121,28 +135,43 @@ public class CompareContext<T> {
         this.type = type;
     }
 
-    public void addFailItem(CompareFailItem failItem) {
-        result.addFailItem(failItem);
+    public int getDepth() {
+        return depth;
     }
 
-    public String generatePrefix() {
-        if (CompareUtils.isBlank(comparePath)) {
-            return "";
+    public void addDiff(Difference diff) {
+        result.addFailItem(diff);
+    }
+
+    /**
+     * Build next path.
+     *
+     * @param name next name or index.
+     * @return     next path.
+     */
+    public String getNPath(Object name) {
+        if (path == null || path.length() == 0) {
+            return String.valueOf(name);
         }
 
-        return comparePath;
+        return path + "." + name;
     }
 
-    public CompareContext<Object> clone(Object obj, Object compare) {
-        CompareContext<Object> context1 = new CompareContext<>();
-        context1.setExpectObject(obj);
-        context1.setCompareObject(compare);
-        context1.setStrictMode(this.isStrictMode());
-        context1.setResult(this.getResult());
-        context1.setIgnoreFields(this.getIgnoreFields());
-        context1.setType(Object.class);
-        return context1;
+    public CompareContext<Object> clone(Object expect, Object actual) {
+        CompareContext<Object> context = new CompareContext<>();
+        context.setExpect(expect);
+        context.setActual(actual);
+        context.setStrictMode(strictMode);
+        context.setResult(result);
+        context.setIgnoreFields(ignoreFields);
+        context.setType(Object.class);
+        context.depth = this.depth + 1;
+        context.recycleChecker = recycleChecker;
+        return context;
     }
 
+    void decr() {
+        this.depth--;
+    }
 
 }

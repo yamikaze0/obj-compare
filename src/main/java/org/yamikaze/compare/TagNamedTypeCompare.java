@@ -1,5 +1,10 @@
 package org.yamikaze.compare;
 
+import org.yamikaze.compare.diff.DifferenceDissmilarity;
+import org.yamikaze.compare.diff.NullOfOneObject;
+import org.yamikaze.compare.diff.TagsCompareDifference;
+import org.yamikaze.compare.utils.InternalCompUtils;
+
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -13,22 +18,20 @@ public class TagNamedTypeCompare extends AbstractNamedTypeCompare<String> {
 
     private static final String VALUE_SEPARATOR = ",";
 
-    public TagNamedTypeCompare(String name, Class type) {
+    public TagNamedTypeCompare(String name, Class<?> type) {
         super(name, type);
     }
 
     @Override
-    public void compareObj(String expectObject, String compareObject, CompareContext<String> context) {
-        if (!context.isStrictMode()) {
-            if (isBlank(expectObject) && isBlank(compareObject)) {
-                return;
-            }
+    public void compareObj(String expect, String actual, CompareContext<String> context) {
+        if (!context.isStrictMode() && InternalCompUtils.isBlank(expect, actual)) {
+            return;
         }
 
         boolean finished = false;
-        if (expectObject == null || compareObject == null) {
+        if (expect == null || actual == null) {
             finished = true;
-            context.addFailItem(new HasNullFailItem(context.generatePrefix(), expectObject, compareObject));
+            context.addDiff(new NullOfOneObject(context.getPath(), expect, actual));
         }
 
         if (finished) {
@@ -36,17 +39,17 @@ public class TagNamedTypeCompare extends AbstractNamedTypeCompare<String> {
         }
 
         // fast compare.
-        if (Objects.equals(expectObject, compareObject)) {
+        if (Objects.equals(expect, actual)) {
             return;
         }
 
 
         boolean hasError = false;
-        Set<String> expectTags = parseTags(expectObject);
-        Set<String> compareTags = parseTags(compareObject);
+        Set<String> expectTags = parseTags(expect);
+        Set<String> compareTags = parseTags(actual);
 
-        TagsCompareFailItem failItem = new TagsCompareFailItem(context.generatePrefix());
-        DifferenceFailItem differenceFailItem = new DifferenceFailItem();
+        TagsCompareDifference failItem = new TagsCompareDifference(context.getPath());
+        DifferenceDissmilarity differenceFailItem = new DifferenceDissmilarity();
 
         for (String key : expectTags) {
 
@@ -60,7 +63,7 @@ public class TagNamedTypeCompare extends AbstractNamedTypeCompare<String> {
         failItem.setDifferenceFailItem(differenceFailItem);
 
         if (hasError) {
-            context.addFailItem(failItem);
+            context.addDiff(failItem);
         }
 
     }

@@ -1,10 +1,12 @@
 package org.yamikaze.compare;
 
+import org.yamikaze.compare.diff.Difference;
+
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.yamikaze.compare.CompareUtils.appendNewLine;
-import static org.yamikaze.compare.CompareUtils.appendTab;
+import static org.yamikaze.compare.utils.InternalCompUtils.appendNewLine;
+import static org.yamikaze.compare.utils.InternalCompUtils.appendTab;
 
 /**
  * @author qinluo
@@ -18,29 +20,19 @@ public class CompareResult {
      */
     private boolean success = false;
 
-    private String successMsg;
-
-    private List<String> skipFields = new ArrayList<>(16);
+    private final List<String> skipFields = new ArrayList<>(16);
 
     /**
      * The compare fail items.
      */
-    private List<CompareFailItem> failItems = new ArrayList<>(16);
+    private final List<Difference> failItems = new ArrayList<>(16);
 
-    public List<CompareFailItem> getFailItems() {
+    public List<Difference> getFailItems() {
         return failItems;
     }
 
-    public void addFailItem(CompareFailItem failItem) {
+    public void addFailItem(Difference failItem) {
         failItems.add(failItem);
-    }
-
-    public String getSuccessMsg() {
-        return successMsg;
-    }
-
-    public void setSuccessMsg(String successMsg) {
-        this.successMsg = successMsg;
     }
 
     public boolean isSuccess() {
@@ -70,10 +62,6 @@ public class CompareResult {
         sb.append("compare result is ").append(success);
         appendNewLine(sb);
 
-        if (successMsg != null) {
-            sb.append("successMsg is ").append(successMsg);
-        }
-
         if (skipFields.size() > 0) {
             sb.append("skipFields are ");
             int index = 0;
@@ -90,7 +78,7 @@ public class CompareResult {
             appendNewLine(sb);
             sb.append("compare errors are ");
             int index = 0;
-            for (CompareFailItem skipField : failItems) {
+            for (Difference skipField : failItems) {
                 appendNewLine(sb);
                 appendTab(sb);
                 sb.append(++index).append("、").append(skipField);

@@ -1,5 +1,10 @@
 package org.yamikaze.compare;
 
+import org.yamikaze.compare.diff.NotEqualsDifference;
+import org.yamikaze.compare.diff.NullOfOneObject;
+import org.yamikaze.compare.diff.SizeDifference;
+import org.yamikaze.compare.utils.InternalCompUtils;
+
 import java.util.Set;
 
 /**
@@ -7,43 +12,34 @@ import java.util.Set;
  * @version 1.0.0
  * @since 2019-05-27 22:53
  */
-public class SetCompare extends AbstractCompare<Set> {
+public class SetCompare extends AbstractCompare<Set<?>> {
 
     @Override
-    public void compareObj(Set expectObject, Set compareObject, CompareContext<Set> context) {
-
-        boolean objIsEmpty = isEmpty(expectObject);
-        boolean compareIsEmpty = isEmpty(compareObject);
-
-        if (!context.isStrictMode()) {
-            if (objIsEmpty && compareIsEmpty) {
-                return;
-            }
+    public void compareObj(Set<?> expect, Set<?> actual, CompareContext<Set<?>> context) {
+        if (!context.isStrictMode() && InternalCompUtils.isEmpty(expect) && InternalCompUtils.isEmpty(actual)) {
+            return;
         }
-
-        boolean objIsNull = expectObject == null;
-        boolean compareIsNull = compareObject == null;
 
         //有一个为空
-        if (objIsNull || compareIsNull) {
-            context.addFailItem(new HasNullFailItem(context.generatePrefix(), expectObject, compareObject));
+        if (expect == null || actual == null) {
+            context.addDiff(new NullOfOneObject(context.getPath(), expect, actual));
             return;
         }
 
-        int objSize = expectObject.size();
-        int compareSize = compareObject.size();
+        int expectSize = expect.size();
+        int actualSize = actual.size();
 
-        if (objSize != compareSize) {
-            context.addFailItem(new SizeCompareFailItem(context.generatePrefix(), objSize, compareSize));
+        if (expectSize != actualSize) {
+            context.addDiff(new SizeDifference(context.getPath(), expectSize, actualSize));
             return;
         }
 
-        for (Object setKey : expectObject) {
-            if (compareObject.contains(setKey)) {
+        for (Object setKey : expect) {
+            if (actual.contains(setKey)) {
                 continue;
             }
 
-            context.addFailItem(new NotEqualsFailItem(context.generatePrefix() + "." + setKey, setKey, null));
+            context.addDiff(new NotEqualsDifference(context.getNPath(setKey), setKey, null));
         }
     }
 }

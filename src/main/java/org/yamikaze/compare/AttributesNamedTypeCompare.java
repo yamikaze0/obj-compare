@@ -1,5 +1,11 @@
 package org.yamikaze.compare;
 
+import org.yamikaze.compare.diff.AttributeCompareDifference;
+import org.yamikaze.compare.diff.DifferenceDissmilarity;
+import org.yamikaze.compare.diff.NullOfOneObject;
+import org.yamikaze.compare.diff.NotEqualsDifference;
+import org.yamikaze.compare.utils.InternalCompUtils;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -15,22 +21,20 @@ public class AttributesNamedTypeCompare extends AbstractNamedTypeCompare<String>
     private static final String KEY_SEPARATOR = ";";
     private static final String VALUE_SEPARATOR = ":";
 
-    public AttributesNamedTypeCompare(String name, Class type) {
+    public AttributesNamedTypeCompare(String name, Class<?> type) {
         super(name, type);
     }
 
     @Override
-    public void compareObj(String expectObject, String compareObject, CompareContext<String> context) {
-        if (!context.isStrictMode()) {
-            if (isBlank(expectObject) && isBlank(compareObject)) {
-                return;
-            }
+    public void compareObj(String expect, String actual, CompareContext<String> context) {
+        if (!context.isStrictMode() && InternalCompUtils.isBlank(expect, actual)) {
+            return;
         }
 
         boolean finished = false;
-        if (expectObject == null || compareObject == null) {
+        if (expect == null || actual == null) {
             finished = true;
-            context.addFailItem(new HasNullFailItem(context.generatePrefix(), expectObject, compareObject));
+            context.addDiff(new NullOfOneObject(context.getPath(), expect, actual));
         }
 
         if (finished) {
@@ -38,17 +42,17 @@ public class AttributesNamedTypeCompare extends AbstractNamedTypeCompare<String>
         }
 
         // fast compare.
-        if (Objects.equals(expectObject, compareObject)) {
+        if (Objects.equals(expect, actual)) {
             return;
         }
 
 
         boolean hasError = false;
-        Map<String, String> expectAttributeMap = parseAttribute(expectObject);
-        Map<String, String> compareAttributeMap = parseAttribute(compareObject);
+        Map<String, String> expectAttributeMap = parseAttribute(expect);
+        Map<String, String> compareAttributeMap = parseAttribute(actual);
 
-        AttributeCompareFailItem failItem = new AttributeCompareFailItem(context.generatePrefix());
-        DifferenceFailItem differenceFailItem = new DifferenceFailItem();
+        AttributeCompareDifference failItem = new AttributeCompareDifference(context.getPath());
+        DifferenceDissmilarity differenceFailItem = new DifferenceDissmilarity();
 
         Set<String> keys = expectAttributeMap.keySet();
         Set<String> compareKeys = compareAttributeMap.keySet();
@@ -67,9 +71,9 @@ public class AttributesNamedTypeCompare extends AbstractNamedTypeCompare<String>
 
             if (!Objects.equals(expectVal, compareVal)) {
                 hasError = true;
-                NotEqualsFailItem item = new NotEqualsFailItem(context.generatePrefix() + "." + key);
-                item.setExpectVal(expectVal);
-                item.setCompareVal(compareVal);
+                NotEqualsDifference item = new NotEqualsDifference(context.getPath() + "." + key);
+                item.setExpect(expectVal);
+                item.setActual(compareVal);
                 failItem.addNotEqualsFailItem(item);
             }
         }
@@ -78,7 +82,7 @@ public class AttributesNamedTypeCompare extends AbstractNamedTypeCompare<String>
         failItem.setDifferenceFailItem(differenceFailItem);
 
         if (hasError) {
-            context.addFailItem(failItem);
+            context.addDiff(failItem);
         }
 
     }

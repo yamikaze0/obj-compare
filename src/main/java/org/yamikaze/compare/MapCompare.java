@@ -1,6 +1,9 @@
 package org.yamikaze.compare;
 
-import java.util.List;
+import org.yamikaze.compare.diff.NullOfOneObject;
+import org.yamikaze.compare.diff.SizeDifference;
+import org.yamikaze.compare.utils.InternalCompUtils;
+
 import java.util.Map;
 import java.util.Set;
 
@@ -9,65 +12,53 @@ import java.util.Set;
  * @version 1.0.0
  * @since 2019-05-27 22:53
  */
-public class MapCompare extends AbstractCompare<Map> {
+public class MapCompare extends AbstractCompare<Map<?, ?>> {
 
     @Override
-    public void compareObj(Map expectObject, Map compareObject, CompareContext<Map> context) {
-
-        boolean objIsEmpty = isEmpty(expectObject);
-        boolean compareIsEmpty = isEmpty(compareObject);
-
-        if (!context.isStrictMode()) {
-            if (objIsEmpty && compareIsEmpty) {
-                return;
-            }
+    public void compareObj(Map<?, ?> expect, Map<?, ?> actual, CompareContext<Map<?, ?>> context) {
+        if (!context.isStrictMode() && InternalCompUtils.isEmpty(expect)
+                && InternalCompUtils.isEmpty(actual)) {
+            return;
         }
-
-        boolean objIsNull = expectObject == null;
-        boolean compareIsNull = compareObject == null;
 
         //有一个为空
-        if (objIsNull || compareIsNull) {
-            context.addFailItem(new HasNullFailItem(context.generatePrefix(), expectObject, compareObject));
+        if (expect == null || actual == null) {
+            context.addDiff(new NullOfOneObject(context.getPath(), expect, actual));
             return;
         }
 
-        int objSize = expectObject.size();
-        int compareSize = compareObject.size();
+        int expectSize = expect.size();
+        int actualSize = actual.size();
 
-        if (objSize != compareSize) {
-            context.addFailItem(new SizeCompareFailItem(context.generatePrefix(), objSize, compareSize));
+        if (expectSize != actualSize) {
+            context.addDiff(new SizeDifference(context.getPath(), expectSize, actualSize));
             return;
         }
 
-        Set set = expectObject.keySet();
+        Set<?> set = expect.keySet();
         for (Object objKey : set) {
             if (isIgnoreFields(context, objKey)) {
-                context.getResult().addSkipField(prefix(context.getComparePath()) + objKey);
+                context.getResult().addSkipField(context.getNPath(objKey));
                 continue;
             }
 
-            Object objValue = expectObject.get(objKey);
-            Object compareValue = compareObject.get(objKey);
+            Object objValue = expect.get(objKey);
+            Object compareValue = actual.get(objKey);
+
+            if (context.getRecycleChecker().isRecycle(objValue, compareValue)) {
+                continue;
+            }
+
+            context.getRecycleChecker().addRecycle(objValue, compareValue);
+
             CompareContext<Object> newContext = context.clone(objValue, compareValue);
-            newContext.setComparePath(prefix(context.getComparePath()) + objKey);
+            newContext.setPath(context.getNPath(objKey));
             CompareFactory.getCompare(Object.class).compareObj(newContext);
         }
     }
 
     private boolean isIgnoreFields(CompareContext<?> context, Object key) {
-        List<IgnoreField> ignoreFields = context.getAllIgnoreFields();
-        if (ignoreFields == null || ignoreFields.isEmpty()) {
-            return false;
-        }
-
         NamedType namedType = new NamedType(key.toString(), key.getClass());
-        for (IgnoreField ignoreField : ignoreFields) {
-            if (ignoreField.ignored(context, namedType)) {
-                return true;
-            }
-        }
-
-        return false;
+        return super.ignored(context, namedType);
     }
 }

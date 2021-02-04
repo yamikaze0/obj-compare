@@ -10,20 +10,17 @@ import java.util.regex.Pattern;
  */
 public class IgnorePatternField extends IgnoreField {
 
-    private Pattern pattern;
+    private final Pattern pattern;
 
     public IgnorePatternField(String fieldName) {
         super(fieldName);
+        pattern = Pattern.compile(getName());
     }
 
     @Override
     public boolean ignored(CompareContext<?> context, NamedType field) {
-        if (!getIgnoreType().isAssignableFrom(field.getType())) {
+        if (!checkType(field.getType())) {
             return false;
-        }
-
-        if (pattern == null) {
-            pattern = Pattern.compile(getFieldName());
         }
 
         return pattern.matcher(field.getName()).find();

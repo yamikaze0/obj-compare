@@ -16,9 +16,8 @@ public class ObjectEqualsUtils {
     public static CompareResult objEquals(Object expectObject, Object compareObject, List<String> skipField, boolean mode) {
         CompareContext<Object> compare = new CompareContext<>();
         compare.setType(Object.class);
-        compare.setComparePath("");
-        compare.setExpectObject(expectObject);
-        compare.setCompareObject(compareObject);
+        compare.setExpect(expectObject);
+        compare.setActual(compareObject);
         compare.setStrictMode(mode);
         compare.setResult(new CompareResult());
 
@@ -49,9 +48,8 @@ public class ObjectEqualsUtils {
     public static CompareResult compare(Object expectObject, Object compareObject, List<IgnoreField> ignoreFields, boolean mode) {
         CompareContext<Object> compare = new CompareContext<>();
         compare.setType(Object.class);
-        compare.setComparePath("");
-        compare.setExpectObject(expectObject);
-        compare.setCompareObject(compareObject);
+        compare.setExpect(expectObject);
+        compare.setActual(compareObject);
         compare.setStrictMode(mode);
         compare.setResult(new CompareResult());
         compare.setIgnoreFields(ignoreFields);

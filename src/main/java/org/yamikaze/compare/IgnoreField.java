@@ -12,7 +12,7 @@ public class IgnoreField {
     /**
      * The ignore field name.
      */
-    private String fieldName;
+    private String name;
 
     /**
      * If field not full-match field name, but it's ends with field.
@@ -26,33 +26,36 @@ public class IgnoreField {
      */
     private Class<?> ignoreType;
 
+    /**
+     * If applyAssignable is true, will ignore all type that is sub type of ignoreType.
+     */
+    private boolean applyAssignable = true;
+
+    protected TypeAssigner assigner;
+
     public IgnoreField() {
     }
 
     public IgnoreField(String fieldName) {
-        this.fieldName = fieldName;
+        this.name = fieldName;
         this.applyPath = true;
         this.ignoreType = Object.class;
     }
 
-    public Class<?> getIgnoreType() {
-        return ignoreType;
+    public void setApplyAssignable(boolean applyAssignable) {
+        this.applyAssignable = applyAssignable;
     }
 
-    public void setIgnoreType(Class ignoreType) {
+    public void setIgnoreType(Class<?> ignoreType) {
         this.ignoreType = ignoreType;
     }
 
-    public String getFieldName() {
-        return fieldName;
+    public String getName() {
+        return name;
     }
 
-    public void setFieldName(String fieldName) {
-        this.fieldName = fieldName;
-    }
-
-    public boolean getApplyPath() {
-        return applyPath;
+    public void setName(String name) {
+        this.name = name;
     }
 
     public void setApplyPath(boolean applyPath) {
@@ -60,7 +63,7 @@ public class IgnoreField {
     }
 
     public boolean ignored(CompareContext<?> context, NamedType namedType) {
-        if (Objects.equals(fieldName, namedType.getName()) && ignoreType.isAssignableFrom(namedType.getType())) {
+        if (Objects.equals(name, namedType.getName()) && checkType(namedType.getType())) {
             return true;
         }
 
@@ -68,15 +71,18 @@ public class IgnoreField {
             return false;
         }
 
-        return Objects.equals(fieldName, prefix(context.getComparePath()) + namedType.getName()) && ignoreType.isAssignableFrom(namedType.getType());
+        return Objects.equals(name, context.getNPath(namedType.getName())) && checkType(namedType.getType());
 
     }
 
-    protected String prefix(String str) {
-        if (str == null || str.trim().length() == 0) {
-            return "";
-        }
+    protected boolean checkType(Class<?> type) {
+        init();
+        return assigner.checkCast(type);
+    }
 
-        return str + ".";
+    private void init() {
+        if (assigner == null) {
+            assigner = new TypeAssigner(applyAssignable, ignoreType);
+        }
     }
 }
