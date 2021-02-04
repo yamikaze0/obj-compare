@@ -27,7 +27,13 @@ public void testCompareResurive() {
 ```
 
 ### 结果输出
-![img.png](img.png)
+```text
+compare result is true
+
+messages: 
+	1:detect recycle reference in path parentUser
+
+```
 
 ## 忽略某些字段比较
 
@@ -85,4 +91,15 @@ public void testCompareObj() {
 ```
 
 ### 结果输出
-![img_1.png](img_1.png)
+```text
+compare result is false
+
+compare skipFields are 
+	1:password
+
+messages: 
+	1:detect recycle reference in path parent
+
+compare differences are 
+	1:NotEqualsDifference@对象不一致，比较路径 id, 期望值为 [1], 实际值为 [2]
+```
