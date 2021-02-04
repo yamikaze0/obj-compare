@@ -104,7 +104,10 @@ public class ObjectCompare extends AbstractCompare<Object> {
                 return;
             }
 
-            context.getRecycleChecker().addRecycle(expect, actual);
+            if (checkRecycled(context, expect, actual)) {
+                context.getResult().addCmpMsg("detect recycle reference in path " + context.getPath());
+                return;
+            }
 
             for (Field field : fields) {
                 NamedType namedType = new NamedType(field.getName(), field.getType());
@@ -130,12 +133,16 @@ public class ObjectCompare extends AbstractCompare<Object> {
                 } finally {
                     field.setAccessible(isAccessible);
                 }
-
-                if (context.getRecycleChecker().isRecycle(ev, av)) {
+                // check equals in references.
+                if (ev == av) {
                     continue;
                 }
 
-                context.getRecycleChecker().addRecycle(ev, av);
+                if (checkRecycled(context, ev, av)) {
+                    context.getResult().addCmpMsg("detect recycle reference in path " + context.getNPath(field.getName()));
+                    continue;
+                }
+
                 CompareContext<Object> nc = context.clone(ev, av);
                 nc.setPath(context.getNPath(field.getName()));
 
@@ -156,6 +163,11 @@ public class ObjectCompare extends AbstractCompare<Object> {
             int dimension = getDimension(nonnullType);
 
             //根据数组维度和数组基本类型找到对比类
+            return;
+        }
+
+        if (checkRecycled(context, expect, actual)) {
+            context.getResult().addCmpMsg("detect recycle reference in path " + context.getPath());
             return;
         }
 

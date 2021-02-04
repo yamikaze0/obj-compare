@@ -70,4 +70,21 @@ public abstract class AbstractCompare<T> implements Compare<T> {
 
         return false;
     }
+
+    /**
+     * Check current compare is recycled.
+     *
+     * @param context compare context.
+     * @param expect  expect.
+     * @param actual  actual
+     * @return        is recycled.
+     */
+    protected boolean checkRecycled(CompareContext<?> context, Object expect, Object actual) {
+        if (context.getRecycleChecker().isRecycle(expect, actual)) {
+            return true;
+        }
+
+        context.getRecycleChecker().addRecycle(expect, actual);
+        return false;
+    }
 }

@@ -34,13 +34,6 @@ public class ListCompare extends AbstractCompare<List<?>>{
         for (int index = 0; index < expectSize; index++) {
             Object newExpect = expect.get(index);
             Object newActual = actual.get(index);
-
-            if (context.getRecycleChecker().isRecycle(newExpect, newActual)) {
-                continue;
-            }
-
-            context.getRecycleChecker().addRecycle(newExpect, newActual);
-
             CompareContext<Object> nc = context.clone(newExpect, newActual);
             nc.setPath(nc.getNPath(index));
             CompareFactory.getCompare(Object.class).compareObj(nc);

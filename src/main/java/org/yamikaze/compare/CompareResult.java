@@ -18,33 +18,41 @@ public class CompareResult {
     /**
      * Compare result.
      */
-    private boolean success = false;
+    private boolean isSame = false;
 
+    /**
+     * The compare skip fields.
+     */
     private final List<String> skipFields = new ArrayList<>(16);
 
     /**
-     * The compare fail items.
+     * The compare difference items.
      */
-    private final List<Difference> failItems = new ArrayList<>(16);
+    private final List<Difference> differences = new ArrayList<>(16);
 
-    public List<Difference> getFailItems() {
-        return failItems;
+    /**
+     * Some tip messages in compare process.
+     */
+    private final List<String> cmpMessages = new ArrayList<>(32);
+
+    public List<Difference> getDifferences() {
+        return differences;
     }
 
-    public void addFailItem(Difference failItem) {
-        failItems.add(failItem);
+    public boolean isSame() {
+        return isSame || differences.isEmpty();
     }
 
-    public boolean isSuccess() {
-        return success || failItems.isEmpty();
-    }
-
-    public void setSuccess(boolean success) {
-        this.success = success;
+    public void setSame(boolean same) {
+        this.isSame = same;
     }
 
     public List<String> getSkipFields() {
         return skipFields;
+    }
+
+    public List<String> getCmpMessages() {
+        return cmpMessages;
     }
 
     public void addSkipField(String field) {
@@ -55,37 +63,46 @@ public class CompareResult {
         skipFields.add(field);
     }
 
+    public void addDiff(Difference diff) {
+        differences.add(diff);
+    }
+
+    public void addCmpMsg(String msg) {
+        this.cmpMessages.add(msg);
+    }
+
+
     @Override
     public String toString() {
-        success = failItems.isEmpty();
+        isSame = differences.isEmpty();
         StringBuilder sb = new StringBuilder(512);
-        sb.append("compare result is ").append(success);
-        appendNewLine(sb);
+        sb.append("compare result is ").append(isSame);
 
         if (skipFields.size() > 0) {
-            sb.append("skipFields are ");
-            int index = 0;
-            for (String skipField : skipFields) {
-                appendNewLine(sb);
-                appendTab(sb);
-                sb.append(++index).append(" : ").append(skipField);
-            }
             appendNewLine(sb);
-
+            layoutMessage(sb, "compare skipFields are ", skipFields);
         }
 
-        if (failItems.size() > 0) {
+        if (cmpMessages.size() > 0) {
             appendNewLine(sb);
-            sb.append("compare errors are ");
-            int index = 0;
-            for (Difference skipField : failItems) {
-                appendNewLine(sb);
-                appendTab(sb);
-                sb.append(++index).append("、").append(skipField);
-            }
+            layoutMessage(sb, "messages: ", cmpMessages);
         }
 
-
+        if (differences.size() > 0) {
+            appendNewLine(sb);
+            layoutMessage(sb, "compare differences are ", differences);
+        }
         return sb.toString();
+    }
+
+    private void layoutMessage(StringBuilder sb, String prefix, List<?> messages) {
+        appendNewLine(sb);
+        sb.append(prefix);
+        int index = 0;
+        for (Object msg : messages) {
+            appendNewLine(sb);
+            appendTab(sb);
+            sb.append(++index).append(":").append(msg);
+        }
     }
 }
