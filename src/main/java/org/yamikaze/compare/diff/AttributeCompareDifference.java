@@ -10,25 +10,25 @@ import java.util.List;
  * @version 1.0.0
  * @date 2020-08-18 15:44
  */
-public class AttributeCompareDissmilarity extends AbstractCompareDissmilarity {
+public class AttributeCompareDifference extends AbstractDifference {
 
-    private List<NotEqualsDissmilarity> notEqualsFailItems = new ArrayList<>();
+    private List<NotEqualsDifference> notEqualsFailItems = new ArrayList<>();
 
     private DifferenceDissmilarity differenceFailItem;
 
-    public AttributeCompareDissmilarity(String path) {
+    public AttributeCompareDifference(String path) {
         super(path);
     }
 
-    public void addNotEqualsFailItem(NotEqualsDissmilarity notEqualsFailItem) {
+    public void addNotEqualsFailItem(NotEqualsDifference notEqualsFailItem) {
         notEqualsFailItems.add(notEqualsFailItem);
     }
 
-    public List<NotEqualsDissmilarity> getNotEqualsFailItems() {
+    public List<NotEqualsDifference> getNotEqualsFailItems() {
         return notEqualsFailItems;
     }
 
-    public void setNotEqualsFailItems(List<NotEqualsDissmilarity> notEqualsFailItems) {
+    public void setNotEqualsFailItems(List<NotEqualsDifference> notEqualsFailItems) {
         this.notEqualsFailItems = notEqualsFailItems;
     }
 
@@ -42,16 +42,16 @@ public class AttributeCompareDissmilarity extends AbstractCompareDissmilarity {
 
 
     @Override
-    public String toString() {
+    public String getMessage() {
         StringBuilder sb = new StringBuilder();
-        sb.append("属性比较失败 : path = ").append(getPath());
+        sb.append("属性比较失败 : path = ").append(path);
         InternalCompUtils.appendNewLine(sb);
         InternalCompUtils.appendTab(sb);
 
         if (!notEqualsFailItems.isEmpty()) {
             InternalCompUtils.appendTab(sb);
             sb.append("** 不相等的属性项 : ");
-            for (NotEqualsDissmilarity failItem : notEqualsFailItems) {
+            for (NotEqualsDifference failItem : notEqualsFailItems) {
                 InternalCompUtils.appendNewLine(sb);
                 InternalCompUtils.appendTab(sb);
                 InternalCompUtils.appendTab(sb);

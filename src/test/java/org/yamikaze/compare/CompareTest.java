@@ -54,4 +54,49 @@ public class CompareTest {
         CompareResult result = ObjectEqualsUtils.compare(expect, target);
         System.out.println(result);
     }
+
+    @Test
+    public void testRecycle() {
+        RecycleUser user = new RecycleUser();
+        RecycleUser _user = new RecycleUser();
+
+        user.setName("qinluo");
+        user.setPassword("haolo2");
+        user.setUser(_user);
+
+
+        _user.setName("qinluo");
+        _user.setPassword("haolo1");
+        _user.setUser(user);
+
+        CompareResult result = ObjectEqualsUtils.compare(user, _user);
+        System.out.println(result);
+    }
+
+    @Test
+    public void testCast() {
+        Boolean a = null;
+
+        Integer b = Integer.class.cast(a);
+
+    }
+
+    @Test
+    public void testRecycle02() {
+        List<Object> expect = new ArrayList<>();
+        List<Object> actual = new ArrayList<>();
+
+        expect.add(1);
+        expect.add(3);
+        expect.add(actual);
+
+        actual.add(1);
+        actual.add(2);
+        actual.add(expect);
+
+
+        CompareResult result = ObjectEqualsUtils.compare(expect, actual);
+        System.out.println(result);
+    }
+
 }

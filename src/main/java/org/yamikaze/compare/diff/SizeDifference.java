@@ -5,19 +5,19 @@ package org.yamikaze.compare.diff;
  * @version 1.0.0
  * @date 2020-08-18 16:19
  */
-public class SizeCompareDissmilarity extends NotEqualsDissmilarity {
+public class SizeDifference extends NotEqualsDifference {
 
-    public SizeCompareDissmilarity(String path) {
+    public SizeDifference(String path) {
         super(path);
     }
 
-    public SizeCompareDissmilarity(String path, int expectValSize, int compareValSize) {
+    public SizeDifference(String path, int expectValSize, int compareValSize) {
         super(path, expectValSize, compareValSize);
     }
 
     @Override
     public String toString() {
-        return "集合类数量比较失败，比较路径 " + getPath() + ", 期望大小为 [" + cast(getExpectVal()) + "], 实际大小为 [" + cast(getCompareVal()) + "]";
+        return "集合类数量比较失败，比较路径 " + path + ", 期望大小为 [" + cast(getExpect()) + "], 实际大小为 [" + cast(getActual()) + "]";
     }
 
     private int cast(Object val) {

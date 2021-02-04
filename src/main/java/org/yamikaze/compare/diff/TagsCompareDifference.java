@@ -5,11 +5,11 @@ package org.yamikaze.compare.diff;
  * @version 1.0.0
  * @date 2020-08-19 10:16
  */
-public class TagsCompareDissmilarity extends AbstractCompareDissmilarity {
+public class TagsCompareDifference extends AbstractDifference {
 
     private DifferenceDissmilarity differenceFailItem;
 
-    public TagsCompareDissmilarity(String path) {
+    public TagsCompareDifference(String path) {
         super(path);
     }
 
@@ -22,7 +22,7 @@ public class TagsCompareDissmilarity extends AbstractCompareDissmilarity {
     }
 
     @Override
-    public String toString() {
+    public String getMessage() {
         return "标签对比不一致 " + differenceFailItem;
     }
 }

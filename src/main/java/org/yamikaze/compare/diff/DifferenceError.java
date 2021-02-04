@@ -1,17 +1,15 @@
-package org.yamikaze.compare;
-
-import org.yamikaze.compare.diff.Difference;
+package org.yamikaze.compare.diff;
 
 /**
  * @author qinluo
  * @version 1.0.0
  * @date 2020-08-18 16:38
  */
-public class CompareErrorItem implements Difference {
+public class DifferenceError implements Difference {
 
-    private Exception exception;
+    private final Exception exception;
 
-    public CompareErrorItem(Exception e) {
+    public DifferenceError(Exception e) {
         this.exception = e;
     }
 
@@ -21,11 +19,6 @@ public class CompareErrorItem implements Difference {
 
     @Override
     public String getMessage() {
-        return null;
-    }
-
-    @Override
-    public String toString() {
         return "比较发生异常 {" +
                 "exception=" + exception +
                 '}';

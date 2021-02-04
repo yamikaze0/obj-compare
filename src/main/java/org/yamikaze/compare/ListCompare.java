@@ -1,7 +1,8 @@
 package org.yamikaze.compare;
 
 import org.yamikaze.compare.diff.NullOfOneObject;
-import org.yamikaze.compare.diff.SizeCompareDissmilarity;
+import org.yamikaze.compare.diff.SizeDifference;
+import org.yamikaze.compare.utils.InternalCompUtils;
 
 import java.util.List;
 
@@ -10,34 +11,39 @@ import java.util.List;
  * @version 1.0.0
  * @since 2019-05-27 17:31
  */
-public class ListCompare extends AbstractCompare<List>{
+public class ListCompare extends AbstractCompare<List<?>>{
 
     @Override
-    public void compareObj(List expectObject, List compareObject, CompareContext<List> context) {
-        if (!context.isStrictMode()) {
-            if (isEmpty(expectObject) && isEmpty(compareObject)) {
-                return;
+    public void compareObj(List<?> expect, List<?> actual, CompareContext<List<?>> context) {
+        if (!context.isStrictMode() && InternalCompUtils.isEmpty(expect) && InternalCompUtils.isEmpty(actual)) {
+            return;
+        }
+
+        if (expect == null || actual == null) {
+            context.addDiff(new NullOfOneObject(context.getPath(), expect, actual));
+            return;
+        }
+
+        int expectSize = expect.size();
+        int actualSize = actual.size();
+        if (expectSize != actualSize) {
+            context.addDiff(new SizeDifference(context.getPath(), expectSize, actualSize));
+            return;
+        }
+
+        for (int index = 0; index < expectSize; index++) {
+            Object newExpect = expect.get(index);
+            Object newActual = actual.get(index);
+
+            if (context.getRecycleChecker().isRecycle(newExpect, newActual)) {
+                continue;
             }
-        }
 
-        if (expectObject == null || compareObject == null) {
-            context.addDiff(new NullOfOneObject(context.generatePrefix(), expectObject, compareObject));
-            return;
-        }
+            context.getRecycleChecker().addRecycle(newExpect, newActual);
 
-        int size1 = expectObject.size();
-        int size2 = compareObject.size();
-        if (size1 != size2) {
-            context.addDiff(new SizeCompareDissmilarity(context.generatePrefix(), size1, size2));
-            return;
-        }
-
-        for (int index = 0; index < size1; index++) {
-            Object item1 = expectObject.get(index);
-            Object item2 = compareObject.get(index);
-            CompareContext<Object> context1 = context.clone(item1, item2);
-            context1.setComparePath(prefix(context.getComparePath()) + index);
-            CompareFactory.getCompare(Object.class).compareObj(context1);
+            CompareContext<Object> nc = context.clone(newExpect, newActual);
+            nc.setPath(nc.getNPath(index));
+            CompareFactory.getCompare(Object.class).compareObj(nc);
         }
 
     }

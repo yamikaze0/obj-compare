@@ -1,6 +1,7 @@
 package org.yamikaze.compare;
 
-import org.yamikaze.compare.diff.NotEqualsDissmilarity;
+import org.yamikaze.compare.diff.NotEqualsDifference;
+import org.yamikaze.compare.utils.InternalCompUtils;
 
 import java.util.Objects;
 
@@ -12,16 +13,14 @@ import java.util.Objects;
 public class StringCompare extends AbstractCompare<String> {
 
     @Override
-    public void compareObj(String expectObject, String compareObject, CompareContext<String> context) {
-        if (!context.isStrictMode()) {
-            if (isBlank(expectObject) && isBlank(compareObject)) {
-                return;
-            }
+    public void compareObj(String expect, String actual, CompareContext<String> context) {
+        if (!context.isStrictMode() && InternalCompUtils.isBlank(expect, actual)) {
+            return;
         }
 
-        boolean result = Objects.equals(expectObject, compareObject);
+        boolean result = Objects.equals(expect, actual);
         if (!result) {
-            context.addDiff(new NotEqualsDissmilarity(context.generatePrefix(), expectObject, compareObject));
+            context.addDiff(new NotEqualsDifference(context.getPath(), expect, actual));
         }
     }
 }

@@ -1,6 +1,7 @@
 package org.yamikaze.compare;
 
-import org.yamikaze.compare.diff.NotEqualsDissmilarity;
+import org.yamikaze.compare.diff.NotEqualsDifference;
+import org.yamikaze.compare.utils.InternalCompUtils;
 
 import java.util.Objects;
 
@@ -12,20 +13,14 @@ import java.util.Objects;
 public class BooleanCompare extends AbstractCompare<Boolean> {
 
     @Override
-    public void compareObj(Boolean expectObject, Boolean compareObject, CompareContext<Boolean> context) {
-        if (!context.isStrictMode()) {
-            if (isFalse(expectObject) && isFalse(compareObject)) {
-                return;
-            }
+    public void compareObj(Boolean expect, Boolean actual, CompareContext<Boolean> context) {
+        if (!context.isStrictMode() && InternalCompUtils.isFalse(expect, actual)) {
+            return;
         }
 
-        boolean compareResult = Objects.equals(expectObject, compareObject);
+        boolean compareResult = Objects.equals(expect, actual);
         if (!compareResult) {
-            context.addDiff(new NotEqualsDissmilarity(context.generatePrefix(), expectObject, compareObject));
+            context.addDiff(new NotEqualsDifference(context.getPath(), expect, actual));
         }
-    }
-
-    private boolean isFalse(Boolean obj) {
-        return obj == null || !obj;
     }
 }

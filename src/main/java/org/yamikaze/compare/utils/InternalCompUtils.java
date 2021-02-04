@@ -10,20 +10,40 @@ import java.util.Map;
  */
 public class InternalCompUtils {
 
-    public static String nullString(boolean isNull) {
-        return isNull ? "null" : "not null";
+    public static boolean isBlank(String... params) {
+        if (params == null || params.length == 0) {
+            return true;
+        }
+
+        for (String value : params) {
+            if (value != null && value.trim().length() != 0) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
-    public static boolean isBlank(String params) {
-        return params == null || params.trim().length() == 0;
-    }
-
-    public static boolean isEmpty(Collection list) {
+    public static boolean isEmpty(Collection<?> list) {
         return list == null || list.isEmpty();
     }
 
-    public static boolean isEmpty(Map map) {
+    public static boolean isEmpty(Map<?, ?> map) {
         return map == null || map.isEmpty();
+    }
+
+    public static boolean isFalse(Boolean ...values) {
+        if (values == null || values.length == 0) {
+            return true;
+        }
+
+        for (Boolean value : values) {
+            if (value != null && value) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public static void appendNewLine(StringBuilder sb) {

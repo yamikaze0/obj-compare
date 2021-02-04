@@ -1,20 +1,15 @@
 package org.yamikaze.compare;
 
-import org.yamikaze.compare.diff.NotEqualsDissmilarity;
+import org.yamikaze.compare.diff.DifferenceError;
+import org.yamikaze.compare.diff.NotEqualsDifference;
 import org.yamikaze.compare.diff.NullOfOneObject;
-import org.yamikaze.compare.diff.TypeCompareDissmilarity;
+import org.yamikaze.compare.diff.TypeCompareDifference;
 import org.yamikaze.compare.utils.InternalClassUtils;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * @author qinluo
@@ -22,246 +17,173 @@ import java.util.stream.Collectors;
  * @since 2019-05-27 17:48
  * cs:off
  */
-public class ObjectCompare extends AbstractCompare<Object>{
+public class ObjectCompare extends AbstractCompare<Object> {
 
     @Override
-    public void compareObj(Object expectObject, Object compareObject, CompareContext<Object> context) {
-        Object noNullObject = orElse(expectObject, compareObject);
-        Class<?> noNullObjectClass = noNullObject.getClass();
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public void compareObj(Object expect, Object actual, CompareContext<Object> context) {
+        Object nonnull = selectNonnull(expect, actual);
+        Class<?> nonnullType = nonnull.getClass();
+        boolean isBoolean = InternalClassUtils.isBoolean(nonnullType);
 
-        if (InternalClassUtils.isSimple(noNullObjectClass) && !isBoolean(noNullObjectClass)) {
-            boolean result = Objects.equals(expectObject, compareObject);
+        if (InternalClassUtils.isSimple(nonnullType) && !isBoolean) {
+            boolean result = Objects.equals(expect, actual);
             if (!result) {
-                context.addDiff(new NotEqualsDissmilarity(context.generatePrefix(), expectObject, compareObject));
+                context.addDiff(new NotEqualsDifference(context.getPath(), expect, actual));
             }
             return;
         }
 
-        boolean hasOneNull = expectObject == null || compareObject == null;
+        boolean hasOneNull = (expect == null || actual == null);
         if (!hasOneNull) {
-            boolean objIsColl = isCollection(expectObject.getClass());
-            boolean compareIsColl = isCollection(compareObject.getClass());
+            boolean expectIsColl = InternalClassUtils.isCollection(expect.getClass());
+            boolean actualIsColl = InternalClassUtils.isCollection(actual.getClass());
             //有一个是集合，但是另外一个不是的情况
-            if (objIsColl != compareIsColl) {
-                context.addDiff(new TypeCompareDissmilarity(context.generatePrefix(), expectObject, compareObject));
+            if (expectIsColl != actualIsColl) {
+                context.addDiff(new TypeCompareDifference(context.getPath(), expect, actual));
                 return;
             }
 
             //2个都不是集合的情况
-            if (!objIsColl) {
-                if (expectObject.getClass() != compareObject.getClass()) {
-                    context.addDiff(new TypeCompareDissmilarity(context.generatePrefix(), expectObject, compareObject));
+            if (!expectIsColl) {
+                if (expect.getClass() != actual.getClass()) {
+                    context.addDiff(new TypeCompareDifference(context.getPath(), expect, actual));
                     return;
                 }
-            } else if (!noNullObjectClass.isArray() && !isSameCollection(expectObject.getClass(), compareObject.getClass())){
+            } else if (!InternalClassUtils.isSameCollection(expect.getClass(), actual.getClass())){
                 //不属于同一种集合的情况
-                context.addDiff(new TypeCompareDissmilarity(context.generatePrefix(), expectObject, compareObject));
+                context.addDiff(new TypeCompareDifference(context.getPath(), expect, actual));
                 return;
             }
         }
 
-        CompareContext newContext = new CompareContext();
-        newContext.setExpectObject(expectObject);
-        newContext.setCompareObject(compareObject);
-        newContext.setStrictMode(context.isStrictMode());
-        newContext.setComparePath(context.getComparePath());
-        newContext.setResult(context.getResult());
-        newContext.setIgnoreFields(context.getIgnoreFields());
+        CompareContext newContext = context.clone(expect, actual);
+        // decr depth.
+        newContext.decr();
 
-        if (isBoolean(noNullObjectClass)) {
+        if (isBoolean) {
             newContext.setType(Boolean.class);
             CompareFactory.getCompare(Boolean.class).compareObj(newContext);
             return;
         }
 
-        if (noNullObjectClass == String.class) {
+        if (nonnullType == String.class) {
             newContext.setType(String.class);
             CompareFactory.getCompare(String.class).compareObj(newContext);
             return;
         }
 
-        if (!isCollection(noNullObjectClass)) {
+        if (!InternalClassUtils.isCollection(nonnullType)) {
             try {
                 //如果相应对象自己定义了equals方法，则使用equals方法进行比较
-                Method equalsMethod = noNullObjectClass.getMethod("equals", Object.class);
-                if (equalsMethod.getDeclaringClass() != Object.class) {
-                    boolean result = Objects.equals(expectObject, compareObject);
+                Method em = nonnullType.getMethod("equals", Object.class);
+                if (em.getDeclaringClass() == nonnullType) {
+                    boolean result = Objects.equals(expect, actual);
                     if (!result) {
-                        context.addDiff(new NotEqualsDissmilarity(context.generatePrefix(), objValue(expectObject), objValue(compareObject)));
+                        context.addDiff(new NotEqualsDifference(context.getPath(), expect, actual));
                     }
                     return;
                 }
             } catch (Exception e) {
                 //
-                context.addDiff(new CompareErrorItem(e));
+                context.addDiff(new DifferenceError(e));
+                return;
+            } catch (StackOverflowError error) {
+                // avoid stack overflow in equals method.
+                context.addDiff(new DifferenceError(new RuntimeException("can't use compare in equals method.")));
                 return;
             }
 
             if (hasOneNull) {
-                context.addDiff(new NullOfOneObject(context.generatePrefix(), expectObject, compareObject));
+                context.addDiff(new NullOfOneObject(context.getPath(), expect, actual));
                 return;
             }
 
-            //可以考虑加入缓存
-            List<Field> fields = getAllDeclaredFields(noNullObjectClass);
+            List<Field> fields = InternalClassUtils.getAllFields(nonnullType);
             if (fields.size() == 0) {
                 return;
             }
 
+            context.getRecycleChecker().addRecycle(expect, actual);
+
             for (Field field : fields) {
+                NamedType namedType = new NamedType(field.getName(), field.getType());
+                if (ignored(context, namedType)) {
+                    context.getResult().addSkipField(context.getNPath(field.getName()));
+                    continue;
+                }
+
                 boolean isAccessible = field.isAccessible();
                 if (!isAccessible) {
                     field.setAccessible(true);
                 }
 
-                if (isIgnoreFields(context, field)) {
-                    context.getResult().addSkipField(prefix(context.getComparePath()) + field.getName());
-                    continue;
-                }
-
-                Object filedValue = null;
-                Object compareValue = null;
+                Object ev = null;
+                Object av = null;
 
                 Class fieldType = field.getType();
-
                 try {
-                    filedValue = field.get(expectObject);
-                    compareValue = field.get(compareObject);
+                    ev = field.get(expect);
+                    av = field.get(actual);
                 } catch (Exception e) {
                     //do nothing
+                } finally {
+                    field.setAccessible(isAccessible);
                 }
 
-                CompareContext<Object> context1 = context.clone(filedValue, compareValue);
-                context1.setComparePath(prefix(context.getComparePath()) + field.getName());
-
-                NamedType namedType = new NamedType(field.getName(), field.getType());
-                AbstractNamedTypeCompare compare = CompareFactory.getNamedTypeCompare(namedType);
-                if (compare != null) {
-                    compare.compareObj(context1);
+                if (context.getRecycleChecker().isRecycle(ev, av)) {
                     continue;
                 }
 
-                CompareFactory.getCompare(fieldType).compareObj(context1);
-                field.setAccessible(isAccessible);
-            }
+                context.getRecycleChecker().addRecycle(ev, av);
+                CompareContext<Object> nc = context.clone(ev, av);
+                nc.setPath(context.getNPath(field.getName()));
 
+                AbstractNamedTypeCompare compare = CompareFactory.getNamedTypeCompare(namedType);
+                if (compare != null) {
+                    compare.compareObj(nc);
+                    continue;
+                }
+
+                CompareFactory.getCompare(fieldType).compareObj(nc);
+            }
             return;
         }
 
         //数组先暂时跳过比较
-        if (noNullObjectClass.isArray()) {
-            Class<?> componentType = getArrayType(noNullObjectClass);
-            int dimension = getArrayDimension(noNullObjectClass, 0);
+        if (nonnullType.isArray()) {
+            Class<?> componentType = getPureType(nonnullType);
+            int dimension = getDimension(nonnullType);
 
             //根据数组维度和数组基本类型找到对比类
             return;
         }
 
-        newContext.setType(getCollectionTopClz(noNullObjectClass));
-        CompareFactory.getCompare(getCollectionTopClz(noNullObjectClass)).compareObj(newContext);
+        Class<?> highestType = InternalClassUtils.lookupHighestType(nonnullType);
+        newContext.setType(highestType);
+        CompareFactory.getCompare(highestType).compareObj(newContext);
 
     }
 
-    private Object orElse(Object obj1, Object obj2) {
-        return obj1 != null ? obj1 : obj2;
+    private Object selectNonnull(Object expect, Object actual) {
+        return expect == null ? actual : expect;
     }
 
-    private boolean isBoolean(Class clz) {
-        return clz == boolean.class || clz == Boolean.class;
-    }
-
-    private boolean isCollection(Class clz) {
-        return clz.isArray() || List.class.isAssignableFrom(clz) || Map.class.isAssignableFrom(clz)
-                || Set.class.isAssignableFrom(clz);
-    }
-
-    private boolean isSameCollection(Class objClz, Class compareClz) {
-        //不考虑数组的情况
-        return (List.class.isAssignableFrom(objClz) && List.class.isAssignableFrom(compareClz))
-                    || (Map.class.isAssignableFrom(objClz) && Map.class.isAssignableFrom(compareClz))
-                    || (Set.class.isAssignableFrom(objClz) && Set.class.isAssignableFrom(compareClz));
-    }
-
-    private Class getCollectionTopClz(Class clz) {
-        if (isCollection(clz) && !clz.isArray()) {
-            if (List.class.isAssignableFrom(clz)) {
-                return List.class;
-            }
-
-            if (Map.class.isAssignableFrom(clz)) {
-                return Map.class;
-            }
-
-            return Set.class;
-        }
-
-        return clz;
-    }
-
-    private String objValue(Object value) {
-        if (value == null) {
-            return null;
-        }
-
-        if (InternalClassUtils.isSimple(value.getClass())) {
-            return String.valueOf(value);
-        }
-
-        return value.toString();
-
-        //return value.getClass().getName() + "@" + value.hashCode();
-    }
-
-    private int getArrayDimension(Class clz, int index) {
-        if (clz.isArray()) {
-            return getArrayDimension(clz.getComponentType(), index + 1);
+    private int getDimension(Class<?> clz) {
+        int index = 1;
+        while (clz.isArray()) {
+            clz = clz.getComponentType();
+            index++;
         }
 
         return index;
     }
 
-    private Class getArrayType(Class clz) {
-        if (clz.isArray()) {
-            return getArrayType(clz.getComponentType());
+    private Class<?> getPureType(Class<?> clz) {
+        while (clz.isArray()) {
+            clz = clz.getComponentType();
         }
 
         return clz;
     }
-
-    private List<Field> getAllDeclaredFields(Class<?> clz) {
-        List<Field> allFields = new ArrayList<>(128);
-        Class<?> waitProcessClz = clz;
-        while (waitProcessClz != Object.class) {
-            addElements(allFields, waitProcessClz.getDeclaredFields());
-            waitProcessClz = waitProcessClz.getSuperclass();
-        }
-
-        // filter static fields
-        return allFields.stream().filter(p -> !Modifier.isStatic(p.getModifiers())).collect(Collectors.toList());
-    }
-
-    private <T> void addElements(List<T> list, T[] fields) {
-        if (list == null || fields == null) {
-            return;
-        }
-
-        Collections.addAll(list, fields);
-    }
-
-    private boolean isIgnoreFields(CompareContext<Object> context, Field field) {
-        List<IgnoreField> ignoreFields = context.getAllIgnoreFields();
-        if (ignoreFields == null || ignoreFields.isEmpty()) {
-            return false;
-        }
-
-        NamedType namedType = new NamedType(field.getName(), field.getType());
-        for (IgnoreField ignoreField : ignoreFields) {
-            if (ignoreField.ignored(context, namedType)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
 }

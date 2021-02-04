@@ -42,16 +42,8 @@ public class IgnoreField {
         this.ignoreType = Object.class;
     }
 
-    public boolean getApplyAssignable() {
-        return applyAssignable;
-    }
-
     public void setApplyAssignable(boolean applyAssignable) {
         this.applyAssignable = applyAssignable;
-    }
-
-    public Class<?> getIgnoreType() {
-        return ignoreType;
     }
 
     public void setIgnoreType(Class<?> ignoreType) {
@@ -64,10 +56,6 @@ public class IgnoreField {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public boolean getApplyPath() {
-        return applyPath;
     }
 
     public void setApplyPath(boolean applyPath) {
@@ -83,7 +71,7 @@ public class IgnoreField {
             return false;
         }
 
-        return Objects.equals(name, prefix(context.getComparePath()) + namedType.getName()) && checkType(namedType.getType());
+        return Objects.equals(name, context.getNPath(namedType.getName())) && checkType(namedType.getType());
 
     }
 
@@ -96,13 +84,5 @@ public class IgnoreField {
         if (assigner == null) {
             assigner = new TypeAssigner(applyAssignable, ignoreType);
         }
-    }
-
-    protected String prefix(String str) {
-        if (str == null || str.trim().length() == 0) {
-            return "";
-        }
-
-        return str + ".";
     }
 }

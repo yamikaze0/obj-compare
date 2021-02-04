@@ -1,7 +1,6 @@
 package org.yamikaze.compare;
 
 import org.yamikaze.compare.diff.Difference;
-import org.yamikaze.compare.utils.InternalCompUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,8 +12,6 @@ import java.util.List;
  */
 public class CompareContext<T> {
 
-    private static final String COMPARE_FAIL = "compare fail";
-
     /**
      * Compare result.
      */
@@ -23,17 +20,17 @@ public class CompareContext<T> {
     /**
      * Expect Object
      */
-    private Object expectObject;
+    private Object expect;
 
     /**
      * Compare Object
      */
-    private Object compareObject;
+    private Object actual;
 
     /**
      * The compare path. such as obj.field.subField.
      */
-    private String comparePath;
+    private String path = "";
 
     /**
      * The compare class type.
@@ -55,11 +52,16 @@ public class CompareContext<T> {
      */
     private int depth;
 
-    private static final List<IgnoreField> systemIgnoreFields = new ArrayList<>(16);
+    /**
+     * Recycle checker
+     */
+    private RecycleChecker recycleChecker = new RecycleChecker();
+
+    private static final List<IgnoreField> DEFAULT_IGNORES = new ArrayList<>(16);
 
     static {
         // fix inner classes
-        systemIgnoreFields.add(new IgnoreField("this$0"));
+        DEFAULT_IGNORES.add(new IgnoreField("this$0"));
     }
 
 
@@ -73,8 +75,12 @@ public class CompareContext<T> {
             ifs.addAll(ignoreFields);
         }
 
-        ifs.addAll(systemIgnoreFields);
+        ifs.addAll(DEFAULT_IGNORES);
         return ifs;
+    }
+
+    public RecycleChecker getRecycleChecker() {
+        return recycleChecker;
     }
 
     public void setIgnoreFields(List<IgnoreField> ignoreFields) {
@@ -97,28 +103,28 @@ public class CompareContext<T> {
         this.result = result;
     }
 
-    public Object getExpectObject() {
-        return expectObject;
+    public Object getExpect() {
+        return expect;
     }
 
-    public void setExpectObject(Object expectObject) {
-        this.expectObject = expectObject;
+    public void setExpect(Object expect) {
+        this.expect = expect;
     }
 
-    public Object getCompareObject() {
-        return compareObject;
+    public Object getActual() {
+        return actual;
     }
 
-    public void setCompareObject(Object compareObject) {
-        this.compareObject = compareObject;
+    public void setActual(Object actual) {
+        this.actual = actual;
     }
 
-    public String getComparePath() {
-        return comparePath;
+    public String getPath() {
+        return path;
     }
 
-    public void setComparePath(String comparePath) {
-        this.comparePath = comparePath;
+    public void setPath(String path) {
+        this.path = path;
     }
 
     public Class<T> getType() {
@@ -137,25 +143,35 @@ public class CompareContext<T> {
         result.addFailItem(diff);
     }
 
-    public String generatePrefix() {
-        if (InternalCompUtils.isBlank(comparePath)) {
-            return "";
+    /**
+     * Build next path.
+     *
+     * @param name next name or index.
+     * @return     next path.
+     */
+    public String getNPath(Object name) {
+        if (path == null || path.length() == 0) {
+            return String.valueOf(name);
         }
 
-        return comparePath;
+        return path + "." + name;
     }
 
-    public CompareContext<Object> clone(Object obj, Object compare) {
+    public CompareContext<Object> clone(Object expect, Object actual) {
         CompareContext<Object> context = new CompareContext<>();
-        context.setExpectObject(obj);
-        context.setCompareObject(compare);
-        context.setStrictMode(this.isStrictMode());
-        context.setResult(this.getResult());
-        context.setIgnoreFields(this.getIgnoreFields());
+        context.setExpect(expect);
+        context.setActual(actual);
+        context.setStrictMode(strictMode);
+        context.setResult(result);
+        context.setIgnoreFields(ignoreFields);
         context.setType(Object.class);
         context.depth = this.depth + 1;
+        context.recycleChecker = recycleChecker;
         return context;
     }
 
+    void decr() {
+        this.depth--;
+    }
 
 }

@@ -1,11 +1,8 @@
 package org.yamikaze.compare;
 
-import org.yamikaze.compare.utils.InternalCompUtils;
-
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.Collection;
-import java.util.Map;
+import java.util.List;
 
 /**
  * @author qinluo
@@ -17,7 +14,7 @@ public abstract class AbstractCompare<T> implements Compare<T> {
     /**
      * Actually Generic Type.
      */
-    private final Type type;
+    protected final Type type;
 
     public AbstractCompare() {
         Type genericSuperclass = this.getClass().getGenericSuperclass();
@@ -35,46 +32,42 @@ public abstract class AbstractCompare<T> implements Compare<T> {
 
     @Override
     public void compareObj(CompareContext<T> context) {
-        T expectObject = context.getType().cast(context.getExpectObject());
-        T compareObject = context.getType().cast(context.getCompareObject());
-
-        //2个对象都为空的时候
-        if (expectObject == null && compareObject == null) {
+        // avoid stack overflow.
+        if (context.getDepth() > CompareConfig.MAX_COMP_DEPTH) {
             return;
         }
 
-        compareObj(expectObject, compareObject, context);
+        T expect = context.getType().cast(context.getExpect());
+        T actual = context.getType().cast(context.getActual());
+
+        //2个对象都为空的时候, 即使对象实际类型不一致 也认为相等
+        if (expect == null && actual == null) {
+            return;
+        }
+
+        compareObj(expect, actual, context);
     }
 
     /**
      * 比较2个对象是否相等
-     * @param expectObject    比较基准对象1
-     * @param compareObject   待比较对象2
-     * @param context         比较上下文，承载比较结果
+     * @param expect    比较基准对象1
+     * @param actual    待比较对象2
+     * @param context   比较上下文，承载比较结果
      */
-    public abstract void compareObj(T expectObject, T compareObject, CompareContext<T> context);
+    public abstract void compareObj(T expect, T actual, CompareContext<T> context);
 
-    String nullString(boolean isNull) {
-        return InternalCompUtils.nullString(isNull);
-    }
-
-    boolean isEmpty(Map map) {
-        return InternalCompUtils.isEmpty(map);
-    }
-
-    boolean isEmpty(Collection map) {
-        return InternalCompUtils.isEmpty(map);
-    }
-
-    String prefix(String str) {
-        if (str == null || str.trim().length() == 0) {
-            return "";
+    protected boolean ignored(CompareContext<?> context, NamedType type) {
+        List<IgnoreField> ignoreFields = context.getAllIgnoreFields();
+        if (ignoreFields == null || ignoreFields.isEmpty()) {
+            return false;
         }
 
-        return str + ".";
-    }
+        for (IgnoreField ignoreField : ignoreFields) {
+            if (ignoreField.ignored(context, type)) {
+                return true;
+            }
+        }
 
-    boolean isBlank(String params) {
-        return InternalCompUtils.isBlank(params);
+        return false;
     }
 }

@@ -11,6 +11,7 @@ import java.util.Set;
  * @version 1.0.0
  * @since 2019-05-27 17:52
  */
+@SuppressWarnings({"rawtypes"})
 public class CompareFactory {
 
     private static final Map<Class, Compare> COMPARE_MAP = new HashMap<>(32);
@@ -43,7 +44,7 @@ public class CompareFactory {
                 new TagNamedTypeCompare("tags", String.class));
     }
 
-    public static void addCompare(NamedType namedType, AbstractNamedTypeCompare compare) {
+    public static void addCompare(NamedType namedType, AbstractNamedTypeCompare<?> compare) {
         if (namedType == null) {
             throw new IllegalArgumentException("register namedType must not be null!");
         }
@@ -59,7 +60,7 @@ public class CompareFactory {
         NAMED_TYPE_COMPARE.put(namedType, compare);
     }
 
-    public static AbstractNamedTypeCompare getNamedTypeCompare(NamedType namedType) {
+    public static AbstractNamedTypeCompare<?> getNamedTypeCompare(NamedType namedType) {
         if (namedType == null) {
             throw new IllegalArgumentException("register namedType must not be null!");
         }
@@ -68,13 +69,13 @@ public class CompareFactory {
     }
 
 
-    public static void addCompare(Class<?> clz, Compare compare) {
+    public static void addCompare(Class<?> clz, Compare<?> compare) {
         if (clz == null) {
             throw new IllegalArgumentException("register class must not be null!");
         }
 
         if (compare instanceof AbstractCompare) {
-            AbstractCompare abstractCompare = (AbstractCompare) compare;
+            AbstractCompare<?> abstractCompare = (AbstractCompare<?>) compare;
             if (!abstractCompare.getType().getTypeName().equals(clz.getName())) {
                 throw new IllegalArgumentException("register class must be same type with compare#getType!");
             }
@@ -83,7 +84,7 @@ public class CompareFactory {
         COMPARE_MAP.put(clz, compare);
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public static <T> Compare<T> getCompare(Class<T> clz) {
         Compare<T> compare = COMPARE_MAP.get(clz);
         if (compare != null) {

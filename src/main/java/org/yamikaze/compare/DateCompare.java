@@ -1,7 +1,7 @@
 package org.yamikaze.compare;
 
 import org.yamikaze.compare.diff.NullOfOneObject;
-import org.yamikaze.compare.diff.NotEqualsDissmilarity;
+import org.yamikaze.compare.diff.NotEqualsDifference;
 
 import java.util.Date;
 import java.util.Objects;
@@ -14,15 +14,15 @@ import java.util.Objects;
 public class DateCompare extends AbstractCompare<Date>{
 
     @Override
-    public void compareObj(Date expectObject, Date compareObject, CompareContext<Date> context) {
-        if (expectObject == null || compareObject == null) {
-            context.addDiff(new NullOfOneObject(context.generatePrefix(), expectObject, compareObject));
+    public void compareObj(Date expect, Date actual, CompareContext<Date> context) {
+        if (expect == null || actual == null) {
+            context.addDiff(new NullOfOneObject(context.getPath(), expect, actual));
             return;
         }
 
-        boolean result = Objects.equals(expectObject, compareObject);
+        boolean result = Objects.equals(expect, actual);
         if (!result) {
-            context.addDiff(new NotEqualsDissmilarity(context.generatePrefix(), expectObject, compareObject));
+            context.addDiff(new NotEqualsDifference(context.getPath(), expect, actual));
         }
     }
 }
