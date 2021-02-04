@@ -16,8 +16,7 @@ public class MapCompare extends AbstractCompare<Map<?, ?>> {
 
     @Override
     public void compareObj(Map<?, ?> expect, Map<?, ?> actual, CompareContext<Map<?, ?>> context) {
-        if (!context.isStrictMode() && InternalCompUtils.isEmpty(expect)
-                && InternalCompUtils.isEmpty(actual)) {
+        if (!context.isStrictMode() && InternalCompUtils.isEmpty(expect) && InternalCompUtils.isEmpty(actual)) {
             return;
         }
 
@@ -44,13 +43,6 @@ public class MapCompare extends AbstractCompare<Map<?, ?>> {
 
             Object objValue = expect.get(objKey);
             Object compareValue = actual.get(objKey);
-
-            if (context.getRecycleChecker().isRecycle(objValue, compareValue)) {
-                continue;
-            }
-
-            context.getRecycleChecker().addRecycle(objValue, compareValue);
-
             CompareContext<Object> newContext = context.clone(objValue, compareValue);
             newContext.setPath(context.getNPath(objKey));
             CompareFactory.getCompare(Object.class).compareObj(newContext);

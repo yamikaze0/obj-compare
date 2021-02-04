@@ -42,6 +42,12 @@ public class IgnoreField {
         this.ignoreType = Object.class;
     }
 
+    public IgnoreField(String fieldName, Class<?> ignoreType) {
+        this.name = fieldName;
+        this.applyPath = true;
+        this.ignoreType = ignoreType;
+    }
+
     public void setApplyAssignable(boolean applyAssignable) {
         this.applyAssignable = applyAssignable;
     }

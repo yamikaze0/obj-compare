@@ -140,7 +140,7 @@ public class CompareContext<T> {
     }
 
     public void addDiff(Difference diff) {
-        result.addFailItem(diff);
+        result.addDiff(diff);
     }
 
     /**

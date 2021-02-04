@@ -51,7 +51,15 @@ public class CompareTest {
 
         target.setParent(parent);
 
-        CompareResult result = ObjectEqualsUtils.compare(expect, target);
+        List<IgnoreField> ignoreFields = new ArrayList<>();
+        // 忽略类型为String.class 字段名为password的 属性比较
+        //ignoreFields.add(new IgnoreField("password", String.class));
+
+        // 忽略任何以word结尾的属性，类型为任意类型
+        IgnorePatternField ignorePatternField = new IgnorePatternField("[\\s\\d]*word");
+        ignoreFields.add(ignorePatternField);
+
+        CompareResult result = CompareObjectUtils.compare(expect, target, ignoreFields);
         System.out.println(result);
     }
 
@@ -69,7 +77,7 @@ public class CompareTest {
         _user.setPassword("haolo1");
         _user.setUser(user);
 
-        CompareResult result = ObjectEqualsUtils.compare(user, _user);
+        CompareResult result = CompareObjectUtils.compare(user, _user);
         System.out.println(result);
     }
 
@@ -95,8 +103,25 @@ public class CompareTest {
         actual.add(expect);
 
 
-        CompareResult result = ObjectEqualsUtils.compare(expect, actual);
+        CompareResult result = CompareObjectUtils.compare(expect, actual);
         System.out.println(result);
+    }
+
+    @Test
+    public void testCompareResurive() {
+        UserV2 user = new UserV2();
+        UserV2 parentUser = new UserV2();
+
+        user.setParentUser(parentUser);
+        parentUser.setParentUser(user);
+
+        user.setPassword("122");
+        user.setUsername("21212");
+        parentUser.setPassword("122");
+        parentUser.setUsername("21212");
+
+        CompareResult compareResult = CompareObjectUtils.compare(user, parentUser);
+        System.out.println(compareResult);
     }
 
 }
